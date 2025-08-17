@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আমার ওয়েবসাইট</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: white;
+      line-height: 1.6;
+    }
+    header {
+      padding: 40px 20px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 1.2em;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+    }
+    nav a {
+      color: #fff;
+      margin: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    nav a:hover {
+      color: yellow;
+    }
+    section {
+      padding: 40px 20px;
+      text-align: center;
+    }
+    section h2 {
+      margin-bottom: 15px;
+    }
+    footer {
+      background: rgba(0,0,0,0.4);
+      text-align: center;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 0.9em;
+    }
+
+    /* মোবাইল ফ্রেন্ডলি ডিজাইন */
+    @media(max-width: 600px) {
+      header h1 {
+        font-size: 2em;
+      }
+      nav {
+        flex-direction: column;
+      }
+      nav a {
+        margin: 8px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🚀 স্বাগতম আমার ওয়েবসাইটে</h1>
+    <p>এই ওয়েবসাইট GitHub Pages থেকে প্রকাশিত</p>
+  </header>
+
+  <nav>
+    <a href="#">হোম</a>
+    <a href="#">আমার সম্পর্কে</a>
+    <a href="#">প্রোজেক্ট</a>
+    <a href="#">যোগাযোগ</a>
+  </nav>
+
+  <section>
+    <h2>🌟 আমার প্রথম ওয়েবসাইট</h2>
+    <p>এটা সম্পূর্ণ রেসপন্সিভ, তাই মোবাইলেও সুন্দরভাবে কাজ করবে।</p>
+    <p>GitHub Pages দিয়ে একদম ফ্রি হোস্টিং পাওয়া যায়।</p>
+  </section>
+
+  <footer>
+    <p>© 2025 - তৈরি করেছেন হানজালা</p>
+  </footer>
+
+</body>
+</html>
