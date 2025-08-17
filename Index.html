@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Quiz Pro</title>
+  <meta name="description" content="Modern Professional Quiz — Timer, Progress, Result & Animations">
+  <style>
+    :root{
+      --bg:#0b1220;           /* deep space */
+      --card:#101a2f;         /* panel */
+      --muted:#7080a0;        /* secondary text */
+      --text:#eaf2ff;         /* main text */
+      --pri:#5b8cff;          /* brand blue */
+      --pri-2:#8c5bff;        /* gradient mix */
+      --ok:#14d18f;           /* correct */
+      --bad:#ff5876;          /* wrong */
+      --warn:#ffd166;         /* timer accent */
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --glass: rgba(255,255,255,.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 120% -10%, rgba(92,139,255,.18), transparent 60%),
+        radial-gradient(900px 700px at -10% 110%, rgba(140,91,255,.18), transparent 60%),
+        linear-gradient(180deg,#0a0f1d 0%, #0b1220 100%);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .app{
+      width:100%; max-width:900px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .header{
+      padding:28px; display:flex; align-items:center; justify-content:space-between;
+      background: linear-gradient(135deg, rgba(91,140,255,.25), rgba(140,91,255,.18));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .brand{display:flex; gap:14px; align-items:center}
+    .logo{
+      width:44px; height:44px; border-radius:12px;
+      background: conic-gradient(from 30deg, var(--pri), var(--pri-2), var(--pri));
+      position:relative; box-shadow:0 8px 24px rgba(91,140,255,.4);
+    }
+    .logo:after{
+      content:""; position:absolute; inset:6px; border-radius:10px; background:#0b1220;
+    }
+    .brand h1{margin:0; font-size:1.35rem; letter-spacing:.3px}
+    .meta{display:flex; gap:14px; align-items:center; color:var(--text)}
+    .pill{
+      background:var(--glass); padding:8px 12px; border-radius:999px; font-size:.9rem;
+      border:1px solid rgba(255,255,255,.08)
+    }
+
+    /* progress & timer */
+    .progress-wrap{display:flex; gap:16px; align-items:center; padding:18px 24px; background:rgba(255,255,255,.03)}
+    .progress{
+      flex:1; height:12px; background:rgba(255,255,255,.07); border-radius:999px; overflow:hidden; position:relative
+    }
+    .bar{
+      height:100%; width:0%; background:linear-gradient(90deg, var(--pri), var(--pri-2));
+      transition:width .45s cubic-bezier(.2,.8,.2,1);
+    }
+    .timer{
+      min-width:84px; display:flex; align-items:center; justify-content:center; gap:8px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+      color:var(--warn); border-radius:999px; padding:8px 14px; font-weight:600;
+    }
+
+    /* main */
+    .content{padding:28px}
+    .question{font-size:1.35rem; line-height:1.45; margin:0 0 18px}
+    .grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:14px;
+    }
+    @media (max-width:690px){ .grid{grid-template-columns:1fr} .header{gap:12px; flex-wrap:wrap} }
+
+    .opt{
+      text-align:left; padding:16px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04); cursor:pointer; transition:transform .08s ease, background .2s ease, border-color .2s;
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .opt:hover{ transform:translateY(-1px); background:rgba(255,255,255,.07)}
+    .opt.disabled{pointer-events:none; opacity:.85}
+    .bullet{
+      min-width:28px; height:28px; border-radius:8px; display:grid; place-items:center; font-weight:700; font-size:.9rem;
+      background:rgba(255,255,255,.08); color:#cfe0ff;
+    }
+    .opt.ok{ border-color:rgba(20,209,143,.35); background:rgba(20,209,143,.12)}
+    .opt.ok .bullet{ background:rgba(20,209,143,.25); color:#d7fff1}
+    .opt.bad{ border-color:rgba(255,88,118,.35); background:rgba(255,88,118,.12)}
+    .opt.bad .bullet{ background:rgba(255,88,118,.25); color:#ffe2e8}
+
+    .actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:12px; flex-wrap:wrap}
+    .btn{
+      padding:12px 18px; border:none; border-radius:12px; cursor:pointer; font-weight:700; letter-spacing:.2px;
+      background:linear-gradient(90deg, var(--pri), var(--pri-2)); color:white; box-shadow:0 10px 24px rgba(91,140,255,.35);
+      transition:transform .08s ease, opacity .2s ease;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.secondary{background:rgba(255,255,255,.06); color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.08)}
+    .btn[disabled]{opacity:.55; pointer-events:none}
+
+    /* views */
+    .view{display:none}
+    .view.active{display:block; animation:fade .35s ease}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+    /* start & result */
+    .start, .result{padding:40px 28px; text-align:center}
+    .title{font-size:2rem; margin:0 0 10px}
+    .subtitle{color:var(--muted); margin-bottom:26px}
+
+    .scorebox{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:22px 0 28px;
+    }
+    .kpi{
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px;
+    }
+    .kpi h4{margin:0 0 6px; color:var(--muted); font-weight:600}
+    .kpi div{font-size:1.35rem; font-weight:800}
+
+    @media (max-width:560px){ .scorebox{grid-template-columns:1fr} }
+
+    .foot{
+      padding:16px 24px; display:flex; justify-content:space-between; align-items:center;
+      background:rgba(255,255,255,.03); border-top:1px solid rgba(255,255,255,.06);
+      font-size:.9rem; color:var(--muted)
+    }
+    a.link{color:#bcd3ff; text-decoration:none}
+    a.link:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- header -->
+    <div class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>AI Quiz Pro</h1>
+          <div class="pill" id="qCount">প্রশ্ন: 0/0</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="pill" id="levelPill">Level: Basic</div>
+        <div class="pill">⚡ Real-time</div>
+      </div>
+    </div>
+
+    <!-- start view -->
+    <div class="view start active" id="view-start">
+      <h2 class="title">🚀 শুরু করি?</h2>
+      <p class="subtitle">সময়ভিত্তিক কুইজ, ইনস্ট্যান্ট রেজাল্ট, স্মার্ট প্রোগ্রেস—সব একসাথে।</p>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+        <button class="btn" id="btnStart">Start Quiz</button>
+        <button class="btn secondary" id="btnHow">How it works</button>
+      </div>
+    </div>
+
+    <!-- progress + timer -->
+    <div class="progress-wrap view" id="progressWrap">
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="timer" id="timer">⏱️ 00</div>
+    </div>
+
+    <!-- quiz view -->
+    <div class="view content" id="view-quiz">
+      <h3 class="question" id="question">প্রশ্ন লোড হচ্ছে…</h3>
+      <div class="grid" id="options"></div>
+      <div class="actions">
+        <button class="btn secondary" id="btnSkip">Skip</button>
+        <div style="display:flex; gap:10px">
+          <button class="btn secondary" id="btnPrev">Prev</button>
+          <button class="btn" id="btnNext" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- result view -->
+    <div class="view result" id="view-result">
+      <h2 class="title" id="resTitle">অভিনন্দন! 🎉</h2>
+      <p class="subtitle" id="resSubtitle">তোমার পারফরম্যান্স নিচে দেখানো হলো।</p>
+
+      <div class="scorebox">
+        <div class="kpi">
+          <h4>মোট স্কোর</h4>
+          <div id="kpiScore">0 / 0</div>
+        </div>
+        <div class="kpi">
+          <h4>সঠিক উত্তর</h4>
+          <div id="kpiCorrect">0</div>
+        </div>
+        <div class="kpi">
+          <h4>সময় দক্ষতা</h4>
+          <div id="kpiTime">0%</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+        <button class="btn" id="btnReplay">Play Again</button>
+        <button class="btn secondary" id="btnShare">Share Result</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>© 2025 AI Quiz Pro — Modern Digital UI</div>
+      <div><a class="link" href="#" id="howLink">How it works</a></div>
+    </div>
+  </div>
+
+  <script>
+    // ==== Quiz Data (তুমি চাইলে প্রশ্ন বাড়াতে/এডিট করতে পারো) ====
+    const QUESTIONS = [
+      {
+        q: "বাংলাদেশের রাজধানী কোথায়?",
+        a: ["ঢাকা","চট্টগ্রাম","খুলনা","রাজশাহী"],
+        correct: 0
+      },
+      {
+        q: "HTML এর পূর্ণরূপ কী?",
+        a: ["High Tech Modern Lang.","Home Tool Markup Lang.","Hyper Text Markup Language","Hyperlinks and Text Markup Language"],
+        correct: 2
+      },
+      {
+        q: "পৃথিবীর সবচেয়ে বড় মহাসাগর কোনটি?",
+        a: ["আটলান্টিক","প্যাসিফিক","ইন্ডিয়ান","আর্কটিক"],
+        correct: 1
+      },
+      {
+        q: "জাভাস্ক্রিপ্ট কোন ধরণের ভাষা?",
+        a: ["Markup","Programming","Styling","Database"],
+        correct: 1
+      },
+      {
+        q: "CSS এর কাজ কী?",
+        a: ["ডেটা স্টোর","স্টাইলিং","সার্ভার চালানো","ইমেজ এডিট"],
+        correct: 1
+      }
+    ];
+
+    // ==== State ====
+    const PER_QUESTION_TIME = 15; // seconds
+    let i = 0;
+    let score = 0;
+    let answered = Array(QUESTIONS.length).fill(null); // store chosen index
+    let timeLeft = PER_QUESTION_TIME;
+    let timerId = null;
+    let spentTime = 0;
+
+    // ==== Elements ====
+    const $ = (s)=>document.querySelector(s);
+    const qCount = $("#qCount");
+    const levelPill = $("#levelPill");
+    const viewStart = $("#view-start");
+    const progressWrap = $("#progressWrap");
+    const viewQuiz = $("#view-quiz");
+    const viewResult = $("#view-result");
+    const bar = $("#bar");
+    const timer = $("#timer");
+    const questionEl = $("#question");
+    const optionsEl = $("#options");
+    const btnNext = $("#btnNext");
+    const btnPrev = $("#btnPrev");
+    const btnSkip = $("#btnSkip");
+    const btnStart = $("#btnStart");
+    const btnHow = $("#btnHow");
+    const howLink = $("#howLink");
+    const resTitle = $("#resTitle");
+    const resSubtitle = $("#resSubtitle");
+    const kpiScore = $("#kpiScore");
+    const kpiCorrect = $("#kpiCorrect");
+    const kpiTime = $("#kpiTime");
+    const btnReplay = $("#btnReplay");
+    const btnShare = $("#btnShare");
+
+    // ==== Utils ====
+    const fmt = (n)=> String(n).padStart(2,"0");
+    const setView = (name)=>{
+      [viewStart, progressWrap, viewQuiz, viewResult].forEach(v=>v.classList.remove("active"));
+      if(name==="start"){ viewStart.classList.add("active"); }
+      if(name==="quiz"){ progressWrap.classList.add("active"); viewQuiz.classList.add("active"); }
+      if(name==="result"){ viewResult.classList.add("active"); }
+    };
+    const updateHeader = ()=>{
+      qCount.textContent = `প্রশ্ন: ${i+1}/${QUESTIONS.length}`;
+      const pct = ((i)/QUESTIONS.length)*100;
+      bar.style.width = `${pct}%`;
+      levelPill.textContent = `Level: ${i<2?"Basic":i<4?"Intermediate":"Pro"}`;
+    };
+
+    function renderQuestion(){
+      const cur = QUESTIONS[i];
+      questionEl.textContent = cur.q;
+      optionsEl.innerHTML = "";
+      cur.a.forEach((text, idx)=>{
+        const btn = document.createElement("button");
+        btn.className = "opt";
+        btn.innerHTML = `<span class="bullet">${String.fromCharCode(65+idx)}</span><span>${text}</span>`;
+        btn.onclick = ()=> onSelect(idx);
+        optionsEl.appendChild(btn);
+      });
+
+      // if previously answered, lock state
+      if(answered[i] !== null){
+        lockOptions(answered[i], cur.correct);
+        btnNext.disabled = false;
+      }else{
+        btnNext.disabled = true;
+      }
+
+      // timer reset/start
+      clearInterval(timerId);
+      timeLeft = PER_QUESTION_TIME;
+      updateTimer();
+      timerId = setInterval(tick, 1000);
+      updateHeader();
+    }
+
+    function tick(){
+      timeLeft--;
+      spentTime++;
+      updateTimer();
+      if(timeLeft<=0){
+        clearInterval(timerId);
+        // auto reveal and go next after short delay
+        lockOptions(-1, QUESTIONS[i].correct);
+        setTimeout(()=>goNext(true), 1000);
+      }
+    }
+
+    function updateTimer(){
+      timer.textContent = `⏱️ ${fmt(timeLeft)}`;
+      // color hint
+      if(timeLeft<=5){ timer.style.color = "var(--bad)"; }
+      else if(timeLeft<=10){ timer.style.color = "var(--warn)"; }
+      else{ timer.style.color = "#bfe1ff"; }
+    }
+
+    function lockOptions(chosen, correct){
+      [...optionsEl.children].forEach((btn, idx)=>{
+        btn.classList.add("disabled");
+        if(idx === correct) btn.classList.add("ok");
+        if(chosen !== null && chosen >=0 && idx === chosen && chosen !== correct) btn.classList.add("bad");
+      });
+    }
+
+    function onSelect(idx){
+      if(answered[i] !== null) return;
+      answered[i] = idx;
+      const correct = QUESTIONS[i].correct;
+      if(idx === correct) score++;
+      clearInterval(timerId);
+      lockOptions(idx, correct);
+      btnNext.disabled = false;
+    }
+
+    function goNext(auto=false){
+      if(i < QUESTIONS.length-1){
+        i++;
+        renderQuestion();
+      }else{
+        showResult();
+      }
+      if(!auto) btnNext.blur();
+    }
+
+    function goPrev(){
+      if(i>0){ i--; renderQuestion(); }
+    }
+
+    function skip(){
+      if(answered[i]===null){ answered[i] = -1; }
+      goNext();
+    }
+
+    function showResult(){
+      setView("result");
+      const total = QUESTIONS.length;
+      const pct = Math.round((score/total)*100);
+      const efficiency = Math.max(0, Math.min(100, Math.round((total*PER_QUESTION_TIME - (spentTime - (total - score))) / (total*PER_QUESTION_TIME) * 100)));
+
+      resTitle.textContent = pct>=80 ? "🔥 অসাধারণ!" : pct>=50 ? "ভালো হয়েছে! ✅" : "চলবে, আরো পারবে 💪";
+      resSubtitle.textContent = `তোমার স্কোর ${pct}% — বিস্তারিত নিচে।`;
+
+      kpiScore.textContent = `${score} / ${total}`;
+      kpiCorrect.textContent = `${score}`;
+      kpiTime.textContent = `${efficiency}%`;
+
+      // fill progress bar to 100
+      bar.style.width = "100%";
+      qCount.textContent = `সমাপ্ত: ${total}/${total}`;
+    }
+
+    function start(){
+      i=0; score=0; spentTime=0; answered = Array(QUESTIONS.length).fill(null);
+      setView("quiz");
+      renderQuestion();
+    }
+
+    function replay(){
+      setView("start");
+      bar.style.width = "0%";
+      qCount.textContent = `প্রশ্ন: 0/${QUESTIONS.length}`;
+    }
+
+    // ==== Events ====
+    btnStart.onclick = start;
+    btnHow.onclick = ()=>alert("প্রতিটি প্রশ্নের জন্য ১৫ সেকেন্ড। উত্তর দিলে বা সময় শেষ হলে পরের প্রশ্নে যাবে। শেষে রেজাল্ট দেখাবে।");
+    howLink.onclick = (e)=>{ e.preventDefault(); btnHow.click(); }
+    btnNext.onclick = ()=>goNext();
+    btnPrev.onclick = goPrev;
+    btnSkip.onclick = skip;
+    btnReplay.onclick = replay;
+    btnShare.onclick = ()=>{
+      const pct = Math.round((score/QUESTIONS.length)*100);
+      const url = location.href;
+      const msg = `আমি AI Quiz Pro-তে ${pct}% স্কোর করেছি! 🎉 দেখুন: ${url}`;
+      if(navigator.share){
+        navigator.share({title:"AI Quiz Pro", text:msg, url});
+      }else{
+        navigator.clipboard.writeText(msg);
+        alert("শেয়ার টেক্সট কপি হয়েছে! যেখানে খুশি পেস্ট করুন।");
+      }
+    };
+
+    // initial header
+    qCount.textContent = `প্রশ্ন: 0/${QUESTIONS.length}`;
+  </script>
+</body>
+  </html>
