@@ -380,12 +380,25 @@ async def get_leaderboard(limit: int = 10):
 
 @app.get("/api/user/history")
 async def get_quiz_history(current_user = Depends(get_current_user), limit: int = 20):
-    history = await db.quizzes.find(
-        {"user_id": current_user["user_id"], "completed": True},
-        {"quiz_id": 1, "category": 1, "difficulty": 1, "score": 1, "correct_answers": 1, "completed_at": 1}
-    ).sort("completed_at", -1).limit(limit).to_list(length=limit)
-    
-    return {"history": history}
+    try:
+        history = await db.quizzes.find(
+            {"user_id": current_user["user_id"], "completed": True},
+            {"quiz_id": 1, "category": 1, "difficulty": 1, "score": 1, "correct_answers": 1, "completed_at": 1}
+        ).sort([("completed_at", -1)]).limit(limit).to_list(length=limit)
+        
+        return {"history": history}
+    except Exception as e:
+        print(f"History endpoint error: {e}")
+        # Fallback without sorting if completed_at is missing
+        try:
+            history = await db.quizzes.find(
+                {"user_id": current_user["user_id"], "completed": True},
+                {"quiz_id": 1, "category": 1, "difficulty": 1, "score": 1, "correct_answers": 1}
+            ).limit(limit).to_list(length=limit)
+            return {"history": history}
+        except Exception as e2:
+            print(f"Fallback history error: {e2}")
+            return {"history": []}
 
 @app.get("/api/stats")
 async def get_app_stats():
